@@ -1,17 +1,3 @@
-// Copyright (c) 2017 The Jaeger Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package network
 
 import (
@@ -47,8 +33,11 @@ func Command() *cobra.Command {
 			return errors.Wrapf(err,"create network fail.")
 		},
 	}
-	createCmd.Flags().StringVarP(&driver, "driver", "", "bridge", "network driver(required)")
-	createCmd.Flags().StringVarP(&subnet, "subnet", "", "10.0.1.0/24", "eg: 10.0.0.0/24(required)")
+	createCmd.Flags().StringVarP(&driver, "driver", "", "bridge", "network driver")
+	createCmd.Flags().StringVarP(&subnet, "subnet", "", "10.0.1.0/24", "eg: 10.0.0.0/24")
+	//createCmd.MarkFlagRequired("driver")
+	//createCmd.MarkFlagRequired("subnet")
+
 	networkCmd.AddCommand(createCmd)
 
 	var deleteCmd = &cobra.Command{
@@ -62,62 +51,5 @@ func Command() *cobra.Command {
 		},
 	}
 	networkCmd.AddCommand(deleteCmd)
-
-
 	return networkCmd
-
 }
-
-
-//var NetworkCommand = cli.Command{
-//	Name:  "network",
-//	Usage: "container network commands",
-//	Subcommands: []cli.Command {
-//		{
-//			Name: "create",
-//			Usage: "create a container network",
-//			Flags: []cli.Flag{
-//				cli.StringFlag{
-//					Name:  "driver",
-//					Usage: "network driver",
-//				},
-//				cli.StringFlag{
-//					Name:  "subnet",
-//					Usage: "subnet cidr",
-//				},
-//			},
-//			Action:func(context *cli.Context) error {
-//				if len(context.Args()) < 1 {
-//					return fmt.Errorf("Missing network name")
-//				}
-//				err := network.CreateNetwork(context.String("driver"), context.String("subnet"), context.Args()[0])
-//				if err != nil {
-//					return fmt.Errorf("create network error: %+v", err)
-//				}
-//				return nil
-//			},
-//		},
-//		{
-//			Name: "list",
-//			Usage: "list container network",
-//			Action:func(context *cli.Context) error {
-//				network.ListNetwork()
-//				return nil
-//			},
-//		},
-//		{
-//			Name: "remove",
-//			Usage: "remove container network",
-//			Action:func(context *cli.Context) error {
-//				if len(context.Args()) < 1 {
-//					return fmt.Errorf("Missing network name")
-//				}
-//				err := network.DeleteNetwork(context.Args()[0])
-//				if err != nil {
-//					return fmt.Errorf("remove network error: %+v", err)
-//				}
-//				return nil
-//			},
-//		},
-//	},
-//}

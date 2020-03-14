@@ -163,16 +163,21 @@ func chroot(path string) (err error) {
 	//if rsystem.RunningInUserNS() {
 	//	return realChroot(path)
 	//}
+	log.Debugf("chroot, path: %s", path)
+	log.Debugf("chroot, do unshare ns.")
 	if err := unix.Unshare(unix.CLONE_NEWNS); err != nil {
 		return fmt.Errorf("Error creating mount namespace before pivot: %v", err)
 	}
 
 	// make everything in new ns private
+	log.Debugf("chroot, MakeRPrivate /")
 	if err := mount.MakeRPrivate("/"); err != nil {
 		return err
 	}
 
+	log.Debugf("chroot, Mounted %s",path)
 	if mounted, _ := mount.Mounted(path); !mounted {
+		log.Debugf("chroot, mount path: %v",path)
 		if err := mount.Mount(path, path, "bind", "rbind,rw"); err != nil {
 			return realChroot(path)
 		}
@@ -180,6 +185,7 @@ func chroot(path string) (err error) {
 
 	// setup oldRoot for pivot_root
 	pivotDir, err := ioutil.TempDir(path, ".pivot_root")
+	log.Debugf("chroot, %s",pivotDir)
 	if err != nil {
 		return fmt.Errorf("Error setting up pivot dir: %v", err)
 	}
@@ -207,11 +213,13 @@ func chroot(path string) (err error) {
 		}
 	}()
 
+	log.Debugf("chroot, do pivot root: %v %v",path,pivotDir)
 	if err := unix.PivotRoot(path, pivotDir); err != nil {
 		// If pivot fails, fall back to the normal chroot after cleaning up temp dir
 		if err := os.Remove(pivotDir); err != nil {
 			return fmt.Errorf("Error cleaning up after failed pivot: %v", err)
 		}
+		log.Infof("do real chroot: %v",path)
 		return realChroot(path)
 	}
 	mounted = true
@@ -230,6 +238,7 @@ func chroot(path string) (err error) {
 	}
 
 	// Now unmount the old root so it's no longer visible from the new root
+	log.Debugf("chroot, unmount pivotDir: %s",pivotDir)
 	if err := unix.Unmount(pivotDir, unix.MNT_DETACH); err != nil {
 		return fmt.Errorf("Error while unmounting old root after pivot: %v", err)
 	}

@@ -22,3 +22,25 @@ pwd
 
 chroot /tmp/nicktming /bin/bash
 ./busybox ls -l
+
+
+mkdir /run/something
+cd /run/something
+mkdir -p etc/something lib usr/lib usr/sbin var/lib/something bin
+mount --bind /lib lib
+mount --bind /usr/lib usr/lib
+mount --bind /usr/sbin usr/sbin
+mount --bind /bin bin
+
+mount -o remount,ro,bind lib
+mount -o remount,ro,bind usr/lib
+mount -o remount,ro,bind usr/sbin
+mount -o remount,ro,bind bin
+
+mkdir -p /app
+touch /app/aaaa
+mkdir -p xxx
+mount --bind /app /root/bbb/xxx
+mount -o remount,ro,bind /root/bbb/xxx
+
+chroot . /bin/ls &

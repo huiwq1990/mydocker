@@ -2,7 +2,6 @@ package network
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"os"
@@ -87,12 +86,15 @@ func (ipam *IPAM) Allocate(subnet *net.IPNet) (net.IP, error) {
 		return nil,err
 	}
 
-	//one, size := subnet.Mask.Size()
-
 	subnetAllocBitMap,exist := (*ipam.Subnets)[subnet.String()]
-
+	// 如果不存在，初始化
 	if !exist {
-		return nil,errors.New("subnet not exist.")
+		ones,bits := subnet.Mask.Size()
+		num := 1 << uint(bits - ones )
+		log.Debugf("subnet, mask: %v %v %v",ones,bits,num)
+		for i:=0;i < num;i++{
+			subnetAllocBitMap += "0"
+		}
 	}
 
 	var allocIP net.IP

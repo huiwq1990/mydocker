@@ -22,7 +22,7 @@ func (d *BridgeNetworkDriver) Create(subnet string, name string) (*Network, erro
 		IpRange: ipRange,
 		Driver: d.Name(),
 	}
-	log.Debugf("create bridge network, subnet: %s, name: %s",subnet,name)
+	log.Debugf("create bridge network: %v, subnet: %s.",subnet,name)
 	err := d.initBridge(n)
 	if err != nil {
 		log.Errorf("error init bridge: %v", err)

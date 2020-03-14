@@ -43,8 +43,6 @@ func (nw Network) String() string{
 return fmt.Sprintf("load network, name: %s, driver: %s, net: %v",nw.Name, nw.Driver,nw.IpRange)
 }
 
-
-
 type NetworkDriver interface {
 	Name() string
 	Create(subnet string, name string) (*Network, error)
@@ -117,7 +115,6 @@ func (nw *Network) load(dumpPath string) error {
 }
 
 func CreateNetwork(driver, subnet, name string) error {
-
 	driverImpl,exist := drivers[driver]
 	if !exist {
 		return errors.New("driver not exit.")
@@ -132,7 +129,7 @@ func CreateNetwork(driver, subnet, name string) error {
 		return err
 	}
 	ip, err := ipAllocator.Allocate(cidr)
-	logrus.Debugf("create network subnet: %s, alloc ip: %s.",subnet,ip)
+	logrus.Debugf("create network subnet: %s, alloc ip: %s. %v",subnet,ip,err)
 	if err != nil {
 		return err
 	}

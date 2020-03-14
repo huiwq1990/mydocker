@@ -20,13 +20,6 @@ func main() {
 
 	v := viper.New()
 	var command = &cobra.Command{
-		//Use:   "",
-		//Short: "Jaeger agent is a local daemon program which collects tracing data.",
-		//Long:  `Jaeger agent is a daemon program that runs on every host and receives tracing data submitted by Jaeger client libraries.`,
-		//RunE: func(cmd *cobra.Command, args []string) error {
-		//
-		//	return nil
-		//},
 	}
 
 	command.AddCommand(run.Command())

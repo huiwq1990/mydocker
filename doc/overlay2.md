@@ -62,5 +62,21 @@ pivot_root . old-root
 ```
 
 
+## overlay mount bind
+
+```
+workDir=/tmp/bindtest
+mkdir -p ${workDir}
+cd ${workDir}
+mkdir -p upper worker merge
+
+
+
+mount -t overlay overlay -o lowerdir=/root/alpine,upperdir=upper,workdir=worker merge
+
+```
+
+
+
 参考
 https://www.cnblogs.com/bianhao3321/p/6873511.html

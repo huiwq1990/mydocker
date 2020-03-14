@@ -6,11 +6,8 @@ import (
 )
 
 func TestAllocate(t *testing.T) {
-	ip, _, _ := net.ParseCIDR("192.168.0.1/24")
-	t.Logf("alloc ip: %v", ip)
-}
+	ip, ipnet, _ := net.ParseCIDR("192.168.0.1/24")
 
-func main()  {
-
-
+	a,b := ipnet.Mask.Size()
+	t.Logf("alloc ip: %v, mask:%v %v", ip, a,b )
 }

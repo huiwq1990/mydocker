@@ -19,6 +19,13 @@ func NewWorkSpace(volume, imageName, containerName string) (string,error) {
 		return "",err
 	}
 
+
+	workDir,err := doOver(imageName,containerName)
+	if err != nil {
+		return "",err
+	}
+
+
 	if volume != "" {
 		volumeURLs := strings.Split(volume, ":")
 		length := len(volumeURLs)
@@ -29,11 +36,6 @@ func NewWorkSpace(volume, imageName, containerName string) (string,error) {
 		} else {
 			return "",errors.New("Volume parameter input is not correct.")
 		}
-	}
-
-	workDir,err := doOver(imageName,containerName)
-	if err != nil {
-		return "",err
 	}
 
 	//TODO 需要结合overlay的upper worker层看看怎么实现
@@ -83,7 +85,7 @@ func doOver(imageName,containerName string) (string,error){
 }
 
 func MountVolume(from string, target string, containerName string) error {
-	targetMountDir := path.Join(types.WriteLayerUrl, containerName,"upper",target)
+	targetMountDir := path.Join(types.WriteLayerUrl, containerName,"merge",target)
 	if err := os.MkdirAll(targetMountDir, 0777); err != nil {
 		log.Infof("Mkdir parent dir %s error. %v", targetMountDir, err)
 	}
@@ -93,6 +95,13 @@ func MountVolume(from string, target string, containerName string) error {
 		log.Errorf("Mount volume failed. %v", err)
 		return err
 	}
+
+	out, err := exec.Command("mount","-o","remount,rw,bind",targetMountDir).CombinedOutput()
+	if err != nil {
+		log.Errorf("Mount volume failed.%v %v",string(out), err)
+		return err
+	}
+
 	return nil
 }
 
