@@ -2,15 +2,16 @@ package run
 
 import (
 	"fmt"
+	"github.com/huiwq1990/mydocker/pkg/network"
+	"github.com/huiwq1990/mydocker/pkg/types"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/huiwq1990/mydocker/pkg/types"
 )
 
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run",
-		Short: "create a container network",
+		Short: "create a container",
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -24,6 +25,12 @@ func Command() *cobra.Command {
 			// 不能即是不前台进程，又不是后台进程
 			if config.Tty && config.Detach {
 				return fmt.Errorf("ti and d paramter can not both provided")
+			}
+
+			if config.Net != "" {
+				if !network.Exist(config.Net){
+					return fmt.Errorf("network %v not exist",config.Net)
+				}
 			}
 
 			resConf := &types.ResourceConfig{

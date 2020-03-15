@@ -2,10 +2,9 @@ package network
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
+	"github.com/huiwq1990/mydocker/pkg/types"
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netns"
-	"github.com/huiwq1990/mydocker/pkg/types"
 	"net"
 
 	"encoding/json"
@@ -15,7 +14,6 @@ import (
 	"path"
 	"runtime"
 	"strings"
-	"text/tabwriter"
 )
 
 var (
@@ -40,7 +38,7 @@ type Network struct {
 }
 
 func (nw Network) String() string{
-return fmt.Sprintf("load network, name: %s, driver: %s, net: %v",nw.Name, nw.Driver,nw.IpRange)
+return fmt.Sprintf("network name: %s, driver: %s, net: %v",nw.Name, nw.Driver,nw.IpRange)
 }
 
 type NetworkDriver interface {
@@ -112,68 +110,6 @@ func (nw *Network) load(dumpPath string) error {
 		return err
 	}
 	return nil
-}
-
-func CreateNetwork(driver, subnet, name string) error {
-	driverImpl,exist := drivers[driver]
-	if !exist {
-		return errors.New("driver not exit.")
-	}
-
-	if ifaceExist(name) {
-		return errors.New("iface already exist.")
-	}
-
-	_, cidr, err := net.ParseCIDR(subnet)
-	if err != nil {
-		return err
-	}
-	ip, err := ipAllocator.Allocate(cidr)
-	logrus.Debugf("create network subnet: %s, alloc ip: %s. %v",subnet,ip,err)
-	if err != nil {
-		return err
-	}
-	cidr.IP = ip
-
-	nw, err := driverImpl.Create(cidr.String(), name)
-	if err != nil {
-		return err
-	}
-
-	return nw.dump(defaultNetworkPath)
-}
-
-func ListNetwork() {
-	w := tabwriter.NewWriter(os.Stdout, 12, 1, 3, ' ', 0)
-	fmt.Fprint(w, "NAME\tIpRange\tDriver\n")
-	for _, nw := range networks {
-		fmt.Fprintf(w, "%s\t%s\t%s\n",
-			nw.Name,
-			nw.IpRange.String(),
-			nw.Driver,
-		)
-	}
-	if err := w.Flush(); err != nil {
-		logrus.Errorf("Flush error %v", err)
-		return
-	}
-}
-
-func DeleteNetwork(networkName string) error {
-	nw, ok := networks[networkName]
-	if !ok {
-		return fmt.Errorf("No Such Network: %s", networkName)
-	}
-
-	if err := ipAllocator.Release(nw.IpRange, &nw.IpRange.IP); err != nil {
-		return fmt.Errorf("Error Remove Network gateway ip: %s", err)
-	}
-
-	if err := drivers[nw.Driver].Delete(*nw); err != nil {
-		return fmt.Errorf("Error Remove Network DriverError: %s", err)
-	}
-
-	return nw.remove(defaultNetworkPath)
 }
 
 func enterContainerNetns(enLink *netlink.Link, cinfo *types.ContainerInfo) func() {

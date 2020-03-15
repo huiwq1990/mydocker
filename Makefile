@@ -27,7 +27,7 @@ runv:
 	./mydocker network delete net1
 	./mydocker network create net1 --subnet 10.1.1.0/24
 
-	./mydocker run --tty --net net1 -v /vagrant:/test alpine /bin/sh
+	./mydocker run --tty --net net1 alpine /bin/sh
 
 
 ci: build run
