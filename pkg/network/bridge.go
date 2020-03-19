@@ -2,10 +2,19 @@ package network
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"net"
 	"github.com/vishvananda/netlink"
 	log "github.com/sirupsen/logrus"
 )
+
+type NetworkDriver interface {
+	Name() string
+	Create(subnet string, name string) (*Network, error)
+	Delete(network Network) error
+	Connect(network *Network, endpoint *Endpoint) error
+	Disconnect(network Network, endpoint *Endpoint) error
+}
 
 type BridgeNetworkDriver struct {
 }
@@ -51,17 +60,18 @@ func (d *BridgeNetworkDriver) Connect(network *Network, endpoint *Endpoint) erro
 	la.Name = endpoint.ID[:5]
 	la.MasterIndex = br.Attrs().Index
 
+	// 需要设置vetpeer的name
 	endpoint.Device = netlink.Veth{
 		LinkAttrs: la,
 		PeerName:  "cif-" + endpoint.ID[:5],
 	}
 
 	if err = netlink.LinkAdd(&endpoint.Device); err != nil {
-		return fmt.Errorf("Error Add Endpoint Device: %v", err)
+		return errors.Wrap(err,"add device fail")
 	}
 
 	if err = netlink.LinkSetUp(&endpoint.Device); err != nil {
-		return fmt.Errorf("Error Add Endpoint Device: %v", err)
+		return errors.Wrap(err,"link setup fail")
 	}
 	return nil
 }

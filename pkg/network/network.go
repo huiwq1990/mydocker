@@ -41,14 +41,6 @@ func (nw Network) String() string{
 return fmt.Sprintf("network name: %s, driver: %s, net: %v",nw.Name, nw.Driver,nw.IpRange)
 }
 
-type NetworkDriver interface {
-	Name() string
-	Create(subnet string, name string) (*Network, error)
-	Delete(network Network) error
-	Connect(network *Network, endpoint *Endpoint) error
-	Disconnect(network Network, endpoint *Endpoint) error
-}
-
 func (nw *Network) dump(dumpPath string) error {
 	if _, err := os.Stat(dumpPath); err != nil {
 		if os.IsNotExist(err) {
@@ -205,16 +197,15 @@ func configPortMapping(ep *Endpoint, cinfo *types.ContainerInfo) error {
 func Connect(networkName string, cinfo *types.ContainerInfo) error {
 	network, ok := networks[networkName]
 	if !ok {
-		return fmt.Errorf("No Such Network: %s", networkName)
+		return fmt.Errorf("network: %s not exist", networkName)
 	}
-	logrus.Debugf("container connect to network: %s",network.String())
 
 	// 分配容器IP地址
 	ip, err := ipAllocator.Allocate(network.IpRange)
 	if err != nil {
 		return err
 	}
-	logrus.Debugf("allocate ip, network range: %s, alloc ip: %s",network.IpRange.String(),ip)
+	logrus.Debugf("container network: %s, alloc ip: %s",network.IpRange.String(),ip)
 
 	// 创建网络端点
 	ep := &Endpoint{

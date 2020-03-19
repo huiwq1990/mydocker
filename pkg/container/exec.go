@@ -2,6 +2,7 @@ package container
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -14,15 +15,14 @@ import (
 const ENV_EXEC_PID = "mydocker_pid"
 const ENV_EXEC_CMD = "mydocker_cmd"
 
-func ExecContainer(containerName string, comArray []string) {
+func ExecContainer(containerName string, comArray []string) error {
 	container, err := GetContainer(containerName)
 	if err != nil {
-		log.Errorf("Exec container getContainerPidByName %s error %v", containerName, err)
-		return
+		return errors.Errorf("get container: %s error %v", containerName, err)
 	}
 
 	cmdStr := strings.Join(comArray, " ")
-	log.Infof("exec cmd, container pid %s, cmd: %s", container.Pid,cmdStr)
+	log.Debugf("exec cmd, container pid %s, cmd: %s", container.Pid,cmdStr)
 
 	cmd := exec.Command("/proc/self/exe", "exec")
 	cmd.Stdin = os.Stdin
@@ -31,22 +31,25 @@ func ExecContainer(containerName string, comArray []string) {
 
 	os.Setenv(ENV_EXEC_PID, container.Pid)
 	os.Setenv(ENV_EXEC_CMD, cmdStr)
-	containerEnvs := getEnvsByPid(container.Pid)
+	containerEnvs,err := getEnvsByPid(container.Pid)
+	if err != nil {
+		return err
+	}
 	cmd.Env = append(os.Environ(), containerEnvs...)
 
 	if err := cmd.Run(); err != nil {
-		log.Errorf("Exec container %s error %v", containerName, err)
+		return err
 	}
+	return nil
 }
 
-func getEnvsByPid(pid string) []string {
+func getEnvsByPid(pid string) ([]string,error) {
 	path := fmt.Sprintf("/proc/%s/environ", pid)
 	contentBytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Errorf("Read file %s error %v", path, err)
-		return nil
+		return nil,errors.Wrapf(err,"read file %s error %v", path)
 	}
 	//env split by \u0000
 	envs := strings.Split(string(contentBytes), "\u0000")
-	return envs
+	return envs,nil
 }

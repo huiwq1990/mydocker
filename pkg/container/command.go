@@ -1,7 +1,7 @@
 package container
 
 import (
-	"github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -83,10 +83,9 @@ func ExecCommand() *cobra.Command {
 		Short: "exec a command into container",
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//This is for callback
+			// 命令回调时会执行
 			if os.Getenv(ENV_EXEC_PID) != "" {
-				logrus.Errorf("pid callback pid %s", os.Getgid())
-				return nil
+				return errors.Errorf("pid callback pid %s", os.Getgid())
 			}
 
 			ExecContainer(args[0], args[1:])
